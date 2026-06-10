@@ -71,6 +71,25 @@ Bạn hãy kiểm tra xem kịch bản có gửi tin nhắn được về Telegr
 
 ---
 
+### Bước 5 (Tùy chọn): Chỉ giám sát khi kết nối với mạng Wi-Fi chỉ định
+Nếu bạn cài đặt trên Laptop và chỉ muốn script hoạt động khi máy kết nối với một hoặc vài mạng Wi-Fi chỉ định (ví dụ Wi-Fi văn phòng hoặc nhà riêng), hãy sử dụng tham số `-AllowedSSID`:
+
+**Chạy thử thủ công với Wi-Fi được phép:**
+```powershell
+# Chỉ chạy giám sát nếu đang kết nối Wi-Fi tên "Wifi_Van_Phong" hoặc "Wifi_Nha_Rieng"
+.\public-ip-monitor.ps1 -ChatId "-5243518839" -AllowedSSID "Wifi_Van_Phong","Wifi_Nha_Rieng" -SendInitial
+```
+
+**Cài đặt tự động chạy ngầm (Scheduled Task) giới hạn theo Wi-Fi:**
+```powershell
+# Tự động đăng ký tác vụ kèm danh sách Wi-Fi được phép
+.\install-public-ip-monitor-task.ps1 -ChatId "-5243518839" -AllowedSSID "Wifi_Van_Phong","Wifi_Nha_Rieng" -IntervalMinutes 5
+```
+
+*Nếu máy tính đang kết nối Wi-Fi ngoài danh sách hoặc dùng mạng khác, script sẽ tự động dừng chạy và không thực hiện kiểm tra IP hay gửi cảnh báo về Telegram.*
+
+---
+
 ## 🛠️ Thông tin kỹ thuật & Khắc phục sự cố
 
 * **Vị trí lưu File Trạng thái**: IP cũ được lưu tại đường dẫn:

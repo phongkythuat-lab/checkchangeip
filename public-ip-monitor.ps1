@@ -2,6 +2,7 @@ param(
     [string]$ChatId = "-5243518839",
     [string]$BotToken = $env:TELEGRAM_BOT_TOKEN,
     [string]$StatePath = "$env:ProgramData\PublicIpMonitor\state.json",
+    [string[]]$AllowedSSID,
     [switch]$SendInitial
 )
 
@@ -49,6 +50,41 @@ function Send-TelegramMessage {
 
 if ([string]::IsNullOrWhiteSpace($BotToken)) {
     throw "Missing bot token. Set TELEGRAM_BOT_TOKEN or pass -BotToken."
+}
+
+if ($AllowedSSID) {
+    $allowedList = @()
+    foreach ($item in $AllowedSSID) {
+        if ($item -like "*,*") {
+            $allowedList += $item -split ","
+        }
+        else {
+            $allowedList += $item
+        }
+    }
+    $allowedList = $allowedList | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+
+    $currentSsid = $null
+    try {
+        $oldEncoding = [Console]::OutputEncoding
+        [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+        $wlanInfo = netsh wlan show interfaces
+        [Console]::OutputEncoding = $oldEncoding
+        foreach ($line in $wlanInfo) {
+            if ($line -match '^\s*SSID\s*:\s*(.*)$') {
+                $currentSsid = $Matches[1].Trim()
+                break
+            }
+        }
+    }
+    catch {
+        # Netsh failed or interface not found
+    }
+
+    if ([string]::IsNullOrWhiteSpace($currentSsid) -or $currentSsid -notin $allowedList) {
+        Write-Host "Current Wi-Fi SSID '$currentSsid' is not in the allowed SSIDs list. Exiting."
+        exit 0
+    }
 }
 
 $currentIp = Get-PublicIp

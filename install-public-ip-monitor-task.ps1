@@ -3,6 +3,7 @@ param(
     [string]$ChatId = "-5243518839",
     [string]$ScriptPath = "$PSScriptRoot\public-ip-monitor.ps1",
     [string]$StatePath = "$env:ProgramData\PublicIpMonitor\state.json",
+    [string[]]$AllowedSSID,
     [int]$IntervalMinutes = 5
 )
 
@@ -13,13 +14,17 @@ if (-not (Test-Path $ScriptPath)) {
 }
 
 $resolvedScript = (Resolve-Path -LiteralPath $ScriptPath).Path
-$arguments = @(
+$argList = @(
     "-NoProfile",
     "-ExecutionPolicy", "Bypass",
     "-File", "`"$resolvedScript`"",
     "-ChatId", "`"$ChatId`"",
     "-StatePath", "`"$StatePath`""
-) -join " "
+)
+if ($AllowedSSID) {
+    $argList += "-AllowedSSID", "`"$($AllowedSSID -join ',')`""
+}
+$arguments = $argList -join " "
 
 $action = New-ScheduledTaskAction -Execute "powershell.exe" -Argument $arguments
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) `
@@ -41,4 +46,7 @@ Write-Host "Installed scheduled task: $TaskName"
 Write-Host "Interval: every $IntervalMinutes minutes"
 Write-Host "Chat ID: $ChatId"
 Write-Host "State path: $StatePath"
+if ($AllowedSSID) {
+    Write-Host "Allowed SSIDs: $($AllowedSSID -join ', ')"
+}
 Write-Host "Token source: TELEGRAM_BOT_TOKEN environment variable"
